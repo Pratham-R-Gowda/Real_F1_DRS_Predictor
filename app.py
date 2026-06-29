@@ -1,4 +1,3 @@
-# app.py
 import streamlit as st
 import fastf1
 import pandas as pd
@@ -7,10 +6,8 @@ from imblearn.over_sampling import SMOTE
 import warnings
 warnings.filterwarnings('ignore')
 
-# 1. PAGE SETUP & CUSTOM CSS
 st.set_page_config(page_title="Real F1 DRS Predictor", page_icon="🏎️", layout="wide", initial_sidebar_state="expanded")
 
-# Inject Custom CSS for F1 aesthetics
 st.markdown("""
     <style>
     .f1-title {
@@ -34,7 +31,6 @@ st.markdown('<p class="f1-title">🏎️ Pit Wall: Live DRS Predictor</p>', unsa
 st.markdown('<p class="subtitle">Powered by real Brazil GP 2023 telemetry & SMOTE-balanced Random Forest.</p>', unsafe_allow_html=True)
 st.divider()
 
-# 2. MODEL TRAINING (Cached)
 @st.cache_resource(show_spinner=False)
 def train_real_f1_model():
     fastf1.Cache.enable_cache('f1_cache')
@@ -71,7 +67,6 @@ def train_real_f1_model():
 with st.spinner("📡 Connecting to AWS F1 Servers..."):
     model, df_real = train_real_f1_model()
 
-# 3. SIDEBAR CONTROLS
 with st.sidebar:
     st.image("https://media.formula1.com/image/upload/f_auto/q_auto/v1677244985/content/dam/fom-website/2018-redesign-assets/Track%20icons%204x3/Brazil.png", caption="Interlagos Circuit")
     st.header("⚙️ Telemetry Inputs")
@@ -81,8 +76,6 @@ with st.sidebar:
     current_tire_age = st.slider("Current Tire Age (Laps)", 1, 40, 10, 1)
     current_pace_adv = st.slider("Pace Advantage (Seconds)", -3.0, 3.0, 0.5, 0.1)
 
-# 4. MAIN DASHBOARD AREA
-# Display inputs as a HUD
 col1, col2, col3 = st.columns(3)
 with col1:
     st.metric(label="Speed Delta", value=f"{current_speed_adv} km/h")
@@ -93,12 +86,10 @@ with col3:
 
 st.markdown("<br>", unsafe_allow_html=True)
 
-# Package inputs and predict
 input_data = pd.DataFrame([[current_speed_adv, current_tire_age, current_pace_adv]], 
                           columns=['Speed_Advantage_kmh', 'Tire_Age', 'Pace_Advantage_Sec'])
 probability = model.predict_proba(input_data)[0][1]
 
-# Display results dynamically
 st.subheader("🎯 Overtake Probability Engine")
 col_prob, col_bar = st.columns([1, 3])
 
@@ -109,7 +100,6 @@ with col_bar:
     st.markdown("<br>", unsafe_allow_html=True)
     st.progress(float(probability))
 
-# Dynamic Strategy Call
 st.markdown("### 📻 Race Engineer Strategy Call")
 if probability < 0.35:
     st.error("🟥 **HOLD POSITION.** We lack the overspeed. Save the battery and tires.")
@@ -118,7 +108,6 @@ elif probability < 0.60:
 else:
     st.success("🟩 **SEND IT!** Overtake delta is optimal. Full battery deployment!")
 
-# 5. DATA INSIGHTS EXPANDER
 st.markdown("<br>", unsafe_allow_html=True)
 with st.expander("📊 Look Under The Hood (Data & Model Analytics)"):
     total_laps = len(df_real)
